@@ -9,7 +9,7 @@ import { saveAs } from 'file-saver'
 
 let downloadLoadingInstance;
 // 是否显示重新登录
-let isReloginShow;
+export let isRelogin = { show: false };
 
 axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8'
 // 创建axios实例
@@ -41,7 +41,7 @@ service.interceptors.request.use(config => {
   if (!isRepeatSubmit && (config.method === 'post' || config.method === 'put')) {
     const requestObj = {
       url: config.url,
-      // data: typeof config.data === 'object' ? JSON.stringify(config.data) : config.data,
+      data: typeof config.data === 'object' ? JSON.stringify(config.data) : config.data,
       time: new Date().getTime()
     }
     const sessionObj = cache.session.getJSON('sessionObj')
@@ -49,12 +49,10 @@ service.interceptors.request.use(config => {
       cache.session.setJSON('sessionObj', requestObj)
     } else {
       const s_url = sessionObj.url;                // 请求地址
-      // const s_data = sessionObj.data;              // 请求数据
+      const s_data = sessionObj.data;              // 请求数据
       const s_time = sessionObj.time;              // 请求时间
       const interval = 1000;                       // 间隔时间(ms)，小于此时间视为重复提交
-      if (
-        // s_data === requestObj.data && 
-        requestObj.time - s_time < interval && s_url === requestObj.url) {
+      if (s_data === requestObj.data && requestObj.time - s_time < interval && s_url === requestObj.url) {
         const message = '数据正在处理，请勿重复提交';
         console.warn(`[${s_url}]: ` + message)
         return Promise.reject(new Error(message))
@@ -121,7 +119,7 @@ service.interceptors.response.use(res => {
     if (status_code === 403) {
       message = error.response.data
     }
-    
+
     if (message == "Network Error") {
       message = "后端接口连接异常";
     }
@@ -140,31 +138,29 @@ service.interceptors.response.use(res => {
   }
 )
 
+
 function re_login () {
-  if (!isReloginShow) {
-    isReloginShow = true
+  if (!isRelogin.show) {
+    isRelogin.show = true
     ElMessageBox.confirm('登录状态已过期，您可以继续留在该页面，或者重新登录', '系统提示', {
       confirmButtonText: '重新登录',
       cancelButtonText: '取消',
       type: 'warning'
     }
     ).then(() => {
-      isReloginShow = false
+      isRelogin.show = false
       store.dispatch('LogOut').then(() => {
-        // 如果是登录页面不需要重新加载
-        if (window.location.hash.indexOf("#/login") != 0) {
-          location.href = '/index'
-        }
+        location.href = '/index';
       })
     }).catch(() => {
-      isReloginShow = false
+      isRelogin.show = false
     })
   }
   return Promise.reject('无效的会话，或者会话已过期，请重新登录。')
 }
 
 // 通用下载方法
-export function download (url, params, filename) {
+export function download(url, params, filename) {
   downloadLoadingInstance = ElLoading.service({ text: "正在下载数据，请稍候", background: "rgba(0, 0, 0, 0.7)", })
   return service.post(url, params, {
     transformRequest: [(params) => { return tansParams(params) }],
