@@ -19,9 +19,9 @@
                @keyup.enter="handleQuery"
             />
          </el-form-item>
-         <el-form-item label="类型" prop="business_type">
+         <el-form-item label="操作类型" prop="operator_type">
             <el-select
-               v-model="queryParams.business_type"
+               v-model="queryParams.operator_type"
                placeholder="操作类型"
                clearable
                style="width: 240px"
@@ -73,7 +73,7 @@
                icon="Delete"
                :disabled="multiple"
                @click="handleDelete"
-               v-hasPermi="['system:operlog:remove']"
+               v-hasPermi="['system/oper_log/delete']"
             >删除</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -82,7 +82,7 @@
                plain
                icon="Delete"
                @click="handleClean"
-               v-hasPermi="['system:operlog:remove']"
+               v-hasPermi="['system/oper_log/delete']"
             >清空</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -91,7 +91,7 @@
                plain
                icon="Download"
                @click="handleExport"
-               v-hasPermi="['system:operlog:export']"
+               v-hasPermi="['system/oper_log/export']"
             >导出</el-button>
          </el-col>
          <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
@@ -112,12 +112,13 @@
             </template>
          </el-table-column>
          <el-table-column label="操作人员" align="center" prop="oper_name" :show-overflow-tooltip="true" sortable="custom" :sort-orders="['descending', 'ascending']" width="100" />
-         <el-table-column label="主机" align="center" prop="operIp" width="130" :show-overflow-tooltip="true" />
+         <el-table-column label="地址" align="center" prop="oper_location" width="130" :show-overflow-tooltip="true" />
          <el-table-column label="操作状态" align="center" prop="status">
             <template #default="scope">
                <dict-tag :options="sys_common_status" :value="scope.row.status" />
             </template>
          </el-table-column>
+         <el-table-column label="耗时(μs)" align="center" prop="duration"></el-table-column>
          <el-table-column label="操作日期" align="center" prop="oper_time" sortable="custom" :sort-orders="['descending', 'ascending']" width="180">
             <template #default="scope">
                <span>{{ parseTime(scope.row.oper_time) }}</span>
@@ -129,7 +130,7 @@
                   type="text"
                   icon="View"
                   @click="handleView(scope.row, scope.index)"
-                  v-hasPermi="['system:operlog:query']"
+                  v-hasPermi="['sys-operlog-query']"
                >详细</el-button>
             </template>
          </el-table-column>
@@ -149,19 +150,29 @@
             <el-row>
                <el-col :span="12">
                   <el-form-item label="操作模块：">{{ form.title }} / {{ typeFormat(form) }}</el-form-item>
-                  <el-form-item
+               </el-col>
+               <el-col :span="12">
+                  <el-form-item label="请求方式：">{{ form.request_method }}</el-form-item>
+               </el-col>
+               <el-col :span="24">
+                 <el-form-item
                     label="登录信息："
                   >{{ form.oper_name }} / {{ form.oper_ip }} / {{ form.oper_location }}</el-form-item>
                </el-col>
-               <el-col :span="12">
+               <el-col :span="24">
                   <el-form-item label="请求地址：">{{ form.oper_url }}</el-form-item>
-                  <el-form-item label="请求方式：">{{ form.request_method }}</el-form-item>
                </el-col>
                <el-col :span="24">
                   <el-form-item label="操作方法：">{{ form.method }}</el-form-item>
                </el-col>
-               <el-col :span="24">
+               <el-col v-if="form.request_method !='GET'" :span="24">
                   <el-form-item label="请求参数：">{{ form.oper_param }}</el-form-item>
+               </el-col>
+               <el-col v-if="form.request_method =='GET'" :span="24">
+                  <el-form-item label="路径参数：">{{ form.path_param }}</el-form-item>
+               </el-col>
+               <el-col :span="24">
+                  <el-form-item label="操作耗时：">{{ form.duration }} 微秒</el-form-item>
                </el-col>
                <el-col :span="24">
                   <el-form-item label="返回参数：">{{ form.json_result }}</el-form-item>
@@ -214,7 +225,7 @@ const data = reactive({
     page_size: 10,
     title: undefined,
     oper_name: undefined,
-    business_type: undefined,
+    operator_type: undefined,
     status: undefined
   }
 });
