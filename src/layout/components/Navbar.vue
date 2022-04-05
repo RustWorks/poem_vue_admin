@@ -25,9 +25,9 @@
           <ruo-yi-git id="ruoyi-git" class="right-menu-item hover-effect" />
         </el-tooltip>
 
-        <el-tooltip content="文档地址" effect="dark" placement="bottom">
+        <!-- <el-tooltip content="文档地址" effect="dark" placement="bottom">
           <ruo-yi-doc id="ruoyi-doc" class="right-menu-item hover-effect" />
-        </el-tooltip>
+        </el-tooltip> -->
 
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
 
@@ -47,21 +47,38 @@
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-popover placement="left-start">
+              <el-popover placement="left-start" :width="width">
                 <template #reference>
                   <span><el-dropdown-item>角色切换</el-dropdown-item></span>
                 </template>
                 <el-radio-group v-model="role_id" @change="roleChanged">
-                  <el-radio
-                    v-for="item in roleOptions"
-                    :label="item.role_id"
-                    :value="item.role_id"
-                    >{{ item.role_name }}</el-radio
-                  >
+                  <el-row>
+                    <el-col v-for="item in roleOptions" :key="item.role_id">
+                      <el-radio :label="item.role_id" :value="item.role_id">{{
+                        item.role_name
+                      }}</el-radio>
+                    </el-col>
+                  </el-row>
+                </el-radio-group>
+              </el-popover>
+              <el-popover placement="left-start" :width="width">
+                <template #reference>
+                  <span><el-dropdown-item>部门切换</el-dropdown-item></span>
+                </template>
+                <el-radio-group v-model="dept_id" @change="deptChanged">
+                  <el-row>
+                    <el-col v-for="item in deptOptions" :key="item.dept_id">
+                      <el-radio :label="item.dept_id" :value="item.dept_id">{{
+                        (item.parent_id != '0'
+                          ? deptMapOptions[item.parent_id] + '-'
+                          : '') + item.dept_name
+                      }}</el-radio>
+                    </el-col>
+                  </el-row>
                 </el-radio-group>
               </el-popover>
               <router-link to="/user/profile">
-                <el-dropdown-item>个人中心</el-dropdown-item>
+                <el-dropdown-item divided>个人中心</el-dropdown-item>
               </router-link>
               <el-dropdown-item command="setLayout">
                 <span>布局设置</span>
@@ -89,7 +106,8 @@ import RuoYiGit from '@/components/RuoYi/Git';
 import RuoYiDoc from '@/components/RuoYi/Doc';
 
 import { listRole } from '@/api/system/role';
-import { changeUserRole } from '@/api/system/user';
+import { listDept } from '@/api/system/dept';
+import { changeUserRole, changeUserDept } from '@/api/system/user';
 
 const store = useStore();
 const getters = computed(() => store.getters);
@@ -97,34 +115,57 @@ const { proxy } = getCurrentInstance();
 
 const role_id = ref(null);
 const roleOptions = ref([]);
+const dept_id = ref(null);
+const deptOptions = ref([]);
+const deptMapOptions = ref([]);
+const width = ref(0);
 
 async function get_options() {
   let queryParams = {
     page_num: 1,
     page_size: Number.MAX_SAFE_INTEGER,
   };
-  const { list: roles } = await listRole(queryParams);
+  const [{ list: roles }, { list: depts }] = await Promise.all([
+    listRole(queryParams),
+    listDept(queryParams),
+  ]);
+  const map = {};
+  let max_length = 0;
   let r = roles.filter((item, index, arr) => {
+    max_length = Math.max(max_length, item.role_name.length);
     return getters.value.roles.includes(item.role_id);
   });
+  let d = depts.filter((item, index, arr) => {
+    map[item.dept_id] = item.dept_name;
+    max_length = Math.max(max_length, item.dept_name.length);
+    return getters.value.depts.includes(item.dept_id);
+  });
+  width.value = max_length * 16 + 22;
   roleOptions.value = r;
   role_id.value = getters.value.role;
+  deptOptions.value = d;
+  deptMapOptions.value = map;
+  dept_id.value = getters.value.dept;
 }
 
 get_options();
 
 async function roleChanged(v) {
   await changeUserRole(getters.value.uid, v);
-  proxy.$modal.msgSuccess('角色切换成功,马上重载界面')
-  
+  proxy.$modal.msgSuccess('角色切换成功,马上重载界面');
+
   setTimeout(() => {
     window.location.reload(false);
   }, 1000);
-  // store.dispatch('GetInfo').then(() => {
-  //   store
-  //     .dispatch('GenerateRoutes')
-  //     .then(proxy.$modal.msgSuccess('角色切换成功'));
-  // });
+}
+
+async function deptChanged(v) {
+  await changeUserDept(getters.value.uid, v);
+  proxy.$modal.msgSuccess('部门切换成功,马上重载界面');
+
+  setTimeout(() => {
+    window.location.reload(false);
+  }, 1000);
 }
 function toggleSideBar() {
   store.dispatch('app/toggleSideBar');

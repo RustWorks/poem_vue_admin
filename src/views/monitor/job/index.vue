@@ -12,7 +12,6 @@
           v-model="queryParams.job_name"
           placeholder="请输入任务名称"
           clearable
-
           @keyup.enter="handleQuery"
         />
       </el-form-item>
@@ -45,24 +44,21 @@
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="Search"   @click="handleQuery"
+        <el-button type="primary" icon="Search" @click="handleQuery"
           >搜索</el-button
         >
-        <el-button icon="Refresh"   @click="resetQuery"
-          >重置</el-button
-        >
+        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
 
-     <el-row :gutter="10" class="mb8" style="height: 35px;">
+    <el-row :gutter="10" class="mb8" style="height: 35px">
       <el-col :span="1.5">
         <el-button
           type="primary"
           plain
           icon="Plus"
-
           @click="handleAdd"
-          v-hasPermi="['monitor:job:add']"
+          v-hasPermi="['system/job/add']"
           >新增</el-button
         >
       </el-col>
@@ -73,7 +69,7 @@
           icon="Edit"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['monitor:job:edit']"
+          v-hasPermi="['system/job/edit']"
           >修改</el-button
         >
       </el-col>
@@ -82,10 +78,9 @@
           type="danger"
           plain
           icon="Delete"
-
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['monitor:job:remove']"
+          v-hasPermi="['system/job/delete']"
           >删除</el-button
         >
       </el-col>
@@ -94,9 +89,8 @@
           type="warning"
           plain
           icon="Download"
-
           @click="handleExport"
-          v-hasPermi="['monitor:job:export']"
+          v-hasPermi="['msystem/job/export']"
           >导出</el-button
         >
       </el-col>
@@ -105,9 +99,8 @@
           type="info"
           plain
           icon="Operation"
-
           @click="handleJobLog"
-          v-hasPermi="['monitor:job:query']"
+          v-hasPermi="['system/job_log/list']"
           >日志</el-button
         >
       </el-col>
@@ -116,7 +109,6 @@
           border
           v-model="fresh_enabled"
           label="自动刷新"
-
           @change="fresh_option_changed"
         ></el-checkbox>
       </el-col>
@@ -211,14 +203,6 @@
           ></el-switch>
         </template>
       </el-table-column>
-      <!-- <el-table-column label="状态" align="center">
-        <template #default="scope">
-          <el-icon color="green" v-if="scope.row.status == 0" :size="900"
-            ><video-play
-          /></el-icon>
-          <el-icon v-else-if="scope.row.status == 1"><video-pause /></el-icon>
-        </template>
-      </el-table-column> -->
       <el-table-column
         label="操作"
         align="center"
@@ -226,45 +210,44 @@
         class-name="small-padding fixed-width"
       >
         <template #default="scope">
-        <!-- v-if="scope.row.status == '0'" -->
-          <el-tooltip  content="修改" placement="top">
+          <el-tooltip content="修改" placement="top">
             <el-button
-                type="text"
-                icon="Edit"
-                @click="handleUpdate(scope.row)"
-                v-hasPermi="['monitor:job:edit']"
+              type="text"
+              icon="Edit"
+              @click="handleUpdate(scope.row)"
+              v-hasPermi="['system/job/edit']"
             ></el-button>
           </el-tooltip>
-          <el-tooltip  content="删除" placement="top">
+          <el-tooltip content="删除" placement="top">
             <el-button
-                type="text"
-                icon="Delete"
-                @click="handleDelete(scope.row)"
-                v-hasPermi="['monitor:job:remove']"
+              type="text"
+              icon="Delete"
+              @click="handleDelete(scope.row)"
+              v-hasPermi="['system/job/delete']"
             ></el-button>
           </el-tooltip>
           <el-tooltip content="执行一次" placement="top">
             <el-button
-                type="text"
-                icon="CaretRight"
-                @click="handleRun(scope.row)"
-                v-hasPermi="['monitor:job:changeStatus']"
+              type="text"
+              icon="CaretRight"
+              @click="handleRun(scope.row)"
+              v-hasPermi="['system/job/run_task_once']"
             ></el-button>
           </el-tooltip>
           <el-tooltip content="任务详细" placement="top">
             <el-button
-                type="text"
-                icon="View"
-                @click="handleView(scope.row)"
-                v-hasPermi="['monitor:job:query']"
+              type="text"
+              icon="View"
+              @click="handleView(scope.row)"
+              v-hasPermi="['system/job/get_by_id']"
             ></el-button>
           </el-tooltip>
           <el-tooltip content="调度日志" placement="top">
             <el-button
-                type="text"
-                icon="Operation"
-                @click="handleJobLog(scope.row)"
-                v-hasPermi="['monitor:job:query']"
+              type="text"
+              icon="Operation"
+              @click="handleJobLog(scope.row)"
+              v-hasPermi="['system/job_log/list']"
             ></el-button>
           </el-tooltip>
         </template>
@@ -304,15 +287,13 @@
             <el-form-item prop="invoke_target">
               <template #label>
                 <span>
-                  调用方法
                   <el-tooltip placement="top">
                     <template #content>
-                      <div>
-                        调用方法：如test_a,就是唯一的定义好的方法代号
-                      </div>
+                      <div>调用方法：如test_a,就是唯一的定义好的方法代号</div>
                     </template>
                     <el-icon><info-filled /></el-icon>
                   </el-tooltip>
+                  调用方法
                 </span>
               </template>
               <el-input
@@ -326,7 +307,6 @@
             <el-form-item prop="task_count">
               <template #label>
                 <span>
-                  运行次数
                   <el-tooltip placement="top">
                     <template #content>
                       <div>
@@ -336,6 +316,7 @@
                     </template>
                     <el-icon><info-filled /></el-icon>
                   </el-tooltip>
+                  运行次数
                 </span>
               </template>
               <el-input-number
@@ -350,7 +331,6 @@
             <el-form-item prop="job_params">
               <template #label>
                 <span>
-                  调用参数
                   <el-tooltip placement="top">
                     <template #content>
                       <div>
@@ -361,6 +341,7 @@
                     </template>
                     <el-icon><info-filled /></el-icon>
                   </el-tooltip>
+                  调用参数
                 </span>
               </template>
               <el-input
@@ -373,7 +354,6 @@
             <el-form-item prop="task_id">
               <template #label>
                 <span>
-                  任务ID
                   <el-tooltip placement="top">
                     <template #content>
                       <div>
@@ -383,12 +363,13 @@
                     </template>
                     <el-icon><info-filled /></el-icon>
                   </el-tooltip>
+                  任务ID
                 </span>
               </template>
               <el-input-number
                 v-model="form.task_id"
                 controls-position="right"
-                 :min="0"
+                :min="0"
                 :max="max_task_id"
                 :disabled="form.status == '1'"
               />
@@ -411,7 +392,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="执行策略" prop="misfire_policy">
-              <el-radio-group v-model="form.misfire_policy"   >
+              <el-radio-group v-model="form.misfire_policy">
                 <el-radio-button label="1">立即执行</el-radio-button>
                 <el-radio-button label="2">执行一次</el-radio-button>
                 <el-radio-button label="3">放弃执行</el-radio-button>
@@ -450,7 +431,7 @@
 
     <!-- 任务日志详细 -->
     <el-dialog title="任务详细" v-model="openView" width="700px" append-to-body>
-      <el-form :model="form" label-width="120px"  >
+      <el-form :model="form" label-width="120px">
         <el-row>
           <el-col :span="12">
             <el-form-item label="任务ID：">{{ form.task_id }}</el-form-item>
@@ -651,7 +632,7 @@ function resetQuery() {
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.job_id);
   names.value = selection.map((item) => item.job_name);
- const  status = selection.map((item) => item.status);
+  const status = selection.map((item) => item.status);
   single.value = selection.length != 1 || status[0] == '1';
   multiple.value = !selection.length;
 }

@@ -9,6 +9,7 @@ export function listMenu(query) {
   })
 }
 
+
 export function listMenuTree(query) {
   return request({
     url: '/system/menu/get_menu_tree',
@@ -73,6 +74,14 @@ export function delMenu(data) {
   return request({
     url: '/system/menu/delete',
     method: 'delete',
+    data
+  })
+}
+
+export function updateLogAndCacheMethod(data) {
+  return request({
+    url: '/system/menu/update_log_cache_method',
+    method: 'put',
     data
   })
 }

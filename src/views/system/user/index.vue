@@ -14,7 +14,7 @@
         </div>
         <div class="head-container">
           <el-tree
-            :data="deptOptions"
+            :data="deptTreeOptions"
             :props="{ label: 'dept_name', children: 'children' }"
             :expand-on-click-node="false"
             :filter-node-method="filterNode"
@@ -85,7 +85,7 @@
           </el-form-item>
         </el-form>
 
-         <el-row :gutter="10" class="mb8" style="height: 35px;">
+        <el-row :gutter="10" class="mb8" style="height: 35px">
           <el-col :span="1.5">
             <el-button
               type="primary"
@@ -118,7 +118,7 @@
               >删除</el-button
             >
           </el-col>
-          <el-col :span="1.5">
+          <!-- <el-col :span="1.5">
             <el-button
               type="info"
               plain
@@ -127,8 +127,8 @@
               v-hasPermi="['system/user/import']"
               >导入</el-button
             >
-          </el-col>
-          <el-col :span="1.5">
+          </el-col> -->
+          <!-- <el-col :span="1.5">
             <el-button
               type="warning"
               plain
@@ -137,7 +137,7 @@
               v-hasPermi="['system/user/export']"
               >导出</el-button
             >
-          </el-col>
+          </el-col> -->
           <right-toolbar
             v-model:showSearch="showSearch"
             @queryTable="getList"
@@ -213,7 +213,7 @@
             align="center"
             prop="created_at"
             v-if="columns[6].visible"
-            width="150"
+            width="160"
           >
             <template #default="scope">
               <span>{{ parseTime(scope.row.created_at) }}</span>
@@ -224,7 +224,12 @@
             align="center"
             width="150"
             class-name="small-padding fixed-width"
-            v-hasPermi="['system/user/edit','system/user/delete','system/user/delete','system/user/reset_passwd']"
+            v-hasPermi="[
+              'system/user/edit',
+              'system/user/delete',
+              'system/user/delete',
+              'system/user/reset_passwd',
+            ]"
           >
             <template #default="scope">
               <el-tooltip content="修改" placement="top">
@@ -281,51 +286,6 @@
       <el-form :model="form" :rules="rules" ref="userRef" label-width="80px">
         <el-row>
           <el-col :span="12">
-            <el-form-item label="用户昵称" prop="user_nickname">
-              <el-input
-                v-model="form.user_nickname"
-                placeholder="请输入用户昵称"
-                maxlength="30"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="归属部门" prop="dept_id">
-              <tree-select
-                v-model:value="form.dept_id"
-                :options="deptOptions"
-                placeholder="请选择归属部门"
-                :objMap="{
-                  value: 'dept_id',
-                  label: 'dept_name',
-                  children: 'children',
-                }"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="手机号码" prop="phone_num">
-              <el-input
-                v-model="form.phone_num"
-                placeholder="请输入手机号码"
-                maxlength="11"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="邮箱" prop="email">
-              <el-input
-                v-model="form.user_email"
-                placeholder="请输入邮箱"
-                maxlength="50"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
             <el-form-item
               v-if="form.id == undefined"
               label="用户名称"
@@ -356,8 +316,17 @@
         </el-row>
         <el-row>
           <el-col :span="12">
-            <el-form-item label="用户性别">
-              <el-select v-model="form.sex" placeholder="请选择">
+            <el-form-item label="用户昵称" prop="user_nickname">
+              <el-input
+                v-model="form.user_nickname"
+                placeholder="请输入用户昵称"
+                maxlength="30"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="用户性别" prop="sex">
+              <el-select v-model="form.sex" placeholder="请选择用户性别">
                 <el-option
                   v-for="dict in sys_user_sex"
                   :key="dict.value"
@@ -367,23 +336,107 @@
               </el-select>
             </el-form-item>
           </el-col>
+        </el-row>
+        <el-row>
           <el-col :span="12">
-            <el-form-item label="状态">
-              <el-radio-group v-model="form.user_status">
-                <el-radio
-                  v-for="dict in sys_normal_disable"
-                  :key="dict.value"
-                  :label="dict.value"
-                  >{{ dict.label }}</el-radio
-                >
-              </el-radio-group>
+            <el-form-item label="用户部门" prop="dept_ids">
+              <el-select
+                v-model="form.dept_ids"
+                multiple
+                collapse-tags
+                placeholder="请选择用户部门"
+              >
+                <el-option
+                  v-for="item in deptOptions"
+                  :key="item.dept_id"
+                  :label="
+                    (item.parent_id != '0'
+                      ? deptMapOptions[item.parent_id] + '-'
+                      : '') + item.dept_name
+                  "
+                  :value="item.dept_id"
+                  :disabled="item.status == '0'"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="激活部门" prop="dept_id">
+              <tree-select
+                v-model:value="form.dept_id"
+                :options="deptTreeOptions"
+                placeholder="请选择激活归属部门"
+                :objMap="{
+                  value: 'dept_id',
+                  label: 'dept_name',
+                  children: 'children',
+                }"
+              />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row>
           <el-col :span="12">
-            <el-form-item label="岗位">
-              <el-select v-model="form.post_ids" multiple placeholder="请选择">
+            <el-form-item label="用户角色" prop="role_ids">
+              <el-select
+                v-model="form.role_ids"
+                multiple
+                collapse-tags
+                placeholder="请选择用户角色"
+              >
+                <el-option
+                  v-for="item in roleOptions"
+                  :key="item.role_id"
+                  :label="item.role_name"
+                  :value="item.role_id"
+                  :disabled="item.status == '0'"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="激活角色" prop="role_id">
+              <el-select v-model="form.role_id" placeholder="请选择激活角色">
+                <el-option
+                  v-for="item in roleOptions"
+                  :key="item.role_id"
+                  :label="item.role_name"
+                  :value="item.role_id"
+                  :disabled="!form.role_ids.includes(item.role_id)"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="手机号码" prop="phone_num">
+              <el-input
+                v-model="form.phone_num"
+                placeholder="请输入手机号码"
+                maxlength="11"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="用户邮箱" prop="email">
+              <el-input
+                v-model="form.user_email"
+                placeholder="请输入邮箱"
+                maxlength="50"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="用户岗位" prop="post_ids">
+              <el-select
+                v-model="form.post_ids"
+                multiple
+                collapse-tags
+                placeholder="请选择用户岗位"
+              >
                 <el-option
                   v-for="item in postOptions"
                   :key="item.post_id"
@@ -397,33 +450,30 @@
         </el-row>
         <el-row>
           <el-col :span="12">
-            <el-form-item label="角色">
-              <el-select v-model="form.role_ids" multiple placeholder="请选择">
-                <el-option
-                  v-for="item in roleOptions"
-                  :key="item.role_id"
-                  :label="item.role_name"
-                  :value="item.role_id"
-                  :disabled="item.status == '0'"
-                ></el-option>
-              </el-select>
+            <el-form-item label="后台用户">
+              <el-radio-group v-model="form.is_admin">
+                <el-radio
+                  v-for="dict in is_admin"
+                  :key="dict.value"
+                  :label="dict.value"
+                  >{{ dict.label }}</el-radio
+                >
+              </el-radio-group>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="激活角色">
-              <el-select v-model="form.role_id" placeholder="请选择">
-                <el-option
-                  v-for="item in roleOptions"
-                  :key="item.role_id"
-                  :label="item.role_name"
-                  :value="item.role_id"
-                  :disabled="!form.role_ids.includes(item.role_id)"
-                ></el-option>
-              </el-select>
+            <el-form-item label="用户状态">
+              <el-radio-group v-model="form.user_status">
+                <el-radio
+                  v-for="dict in sys_normal_disable"
+                  :key="dict.value"
+                  :label="dict.value"
+                  >{{ dict.label }}</el-radio
+                >
+              </el-radio-group>
             </el-form-item>
           </el-col>
         </el-row>
-
         <el-row>
           <el-col :span="24">
             <el-form-item label="备注">
@@ -445,7 +495,7 @@
     </el-dialog>
 
     <!-- 用户导入对话框 -->
-    <el-dialog
+    <!-- <el-dialog
       :title="upload.title"
       v-model="upload.open"
       width="400px"
@@ -489,13 +539,13 @@
           <el-button @click="upload.open = false">取 消</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-dialog> -->
   </div>
 </template>
 
 <script setup name="User">
-import { getToken } from '@/utils/auth';
-import { treeselect } from '@/api/system/dept';
+// import { getToken } from '@/utils/auth';
+import { treeselect, listDept } from '@/api/system/dept';
 import { listPost } from '@/api/system/post';
 import { listRole } from '@/api/system/role';
 import {
@@ -510,9 +560,9 @@ import {
 
 const router = useRouter();
 const { proxy } = getCurrentInstance();
-const { sys_normal_disable, sys_user_sex } = proxy.useDict(
+const { sys_normal_disable, sys_user_sex,is_admin } = proxy.useDict(
   'sys_normal_disable',
-  'sys_user_sex'
+  'sys_user_sex','is_admin'
 );
 
 const userList = ref([]);
@@ -527,25 +577,27 @@ const total = ref(0);
 const title = ref('');
 const dateRange = ref([]);
 const dept_name = ref('');
-const deptOptions = ref(undefined);
+const deptTreeOptions = ref(undefined);
 const initPassword = ref(undefined);
 const postOptions = ref([]);
 const roleOptions = ref([]);
+const deptOptions = ref([]);
+const deptMapOptions = ref({});
 /*** 用户导入参数 */
-const upload = reactive({
-  // 是否显示弹出层（用户导入）
-  open: false,
-  // 弹出层标题（用户导入）
-  title: '',
-  // 是否禁用上传
-  isUploading: false,
-  // 是否更新已经存在的用户数据
-  updateSupport: 0,
-  // 设置上传的请求头部
-  headers: { Authorization: 'Bearer ' + getToken() },
-  // 上传的地址
-  url: import.meta.env.VITE_APP_BASE_API + 'system/user/importData',
-});
+// const upload = reactive({
+//   // 是否显示弹出层（用户导入）
+//   open: false,
+//   // 弹出层标题（用户导入）
+//   title: '',
+//   // 是否禁用上传
+//   isUploading: false,
+//   // 是否更新已经存在的用户数据
+//   updateSupport: 0,
+//   // 设置上传的请求头部
+//   headers: { Authorization: 'Bearer ' + getToken() },
+//   // 上传的地址
+//   url: import.meta.env.VITE_APP_BASE_API + 'system/user/importData',
+// });
 // 列显隐信息
 const columns = ref([
   { key: 0, label: `用户编号`, visible: true },
@@ -592,7 +644,42 @@ const data = reactive({
     user_email: [
       {
         type: 'email',
-        message: "'请输入正确的邮箱地址",
+        message: '请输入正确的邮箱地址',
+        trigger: ['blur', 'change'],
+      },
+    ],
+    dept_id: [
+      {
+        required: true,
+        message: '用户部门ID不能为空',
+        trigger: ['blur', 'change'],
+      },
+    ],
+    dept_ids: [
+      {
+        required: true,
+        message: '用户部门ID列表不能为空',
+        trigger: ['blur', 'change'],
+      },
+    ],
+    sex: [
+      {
+        required: true,
+        message: '用户性别不能为空',
+        trigger: ['blur', 'change'],
+      },
+    ],
+    role_ids: [
+      {
+        required: true,
+        message: '用户角色不能为空',
+        trigger: ['blur', 'change'],
+      },
+    ],
+    role_id: [
+      {
+        required: true,
+        message: '用户激活角色不能为空',
         trigger: ['blur', 'change'],
       },
     ],
@@ -618,9 +705,9 @@ watch(dept_name, (val) => {
   proxy.$refs['deptTreeRef'].filter(val);
 });
 /** 查询部门下拉树结构 */
-function getTreeselect() {
+function getDeptTreeselect() {
   treeselect().then((response) => {
-    deptOptions.value = response;
+    deptTreeOptions.value = response;
   });
 }
 /** 查询用户列表 */
@@ -666,15 +753,15 @@ function handleDelete(row) {
     .catch(() => {});
 }
 /** 导出按钮操作 */
-function handleExport() {
-  proxy.download(
-    'system/user/export',
-    {
-      ...queryParams.value,
-    },
-    `user_${new Date().getTime()}.xlsx`
-  );
-}
+// function handleExport() {
+//   proxy.download(
+//     'system/user/export',
+//     {
+//       ...queryParams.value,
+//     },
+//     `user_${new Date().getTime()}.xlsx`
+//   );
+// }
 /** 用户状态修改  */
 function handleStatusChange(row) {
   let text = row.user_status === '1' ? '启用' : '停用';
@@ -690,19 +777,7 @@ function handleStatusChange(row) {
       row.user_status = row.user_status === '0' ? '1' : '0';
     });
 }
-/** 更多操作 */
-function handleCommand(command, row) {
-  switch (command) {
-    case 'handleResetPwd':
-      handleResetPwd(row);
-      break;
-    case 'handleAuthRole':
-      handleAuthRole(row);
-      break;
-    default:
-      break;
-  }
-}
+
 /** 跳转角色分配 */
 function handleAuthRole(row) {
   const userId = row.id;
@@ -733,46 +808,46 @@ function handleSelectionChange(selection) {
   multiple.value = !selection.length;
 }
 /** 导入按钮操作 */
-function handleImport() {
-  upload.title = '用户导入';
-  upload.open = true;
-}
+// function handleImport() {
+//   upload.title = '用户导入';
+//   upload.open = true;
+// }
 /** 下载模板操作 */
-function importTemplate() {
-  proxy.download(
-    'system/user/importTemplate',
-    {},
-    `user_template_${new Date().getTime()}.xlsx`
-  );
-}
+// function importTemplate() {
+//   proxy.download(
+//     'system/user/importTemplate',
+//     {},
+//     `user_template_${new Date().getTime()}.xlsx`
+//   );
+// }
 /**文件上传中处理 */
-const handleFileUploadProgress = (event, file, fileList) => {
-  upload.isUploading = true;
-};
+// const handleFileUploadProgress = (event, file, fileList) => {
+//   upload.isUploading = true;
+// };
 /** 文件上传成功处理 */
-const handleFileSuccess = (response, file, fileList) => {
-  upload.open = false;
-  upload.isUploading = false;
-  proxy.$refs['uploadRef'].clearFiles();
-  proxy.$alert(
-    "<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" +
-      response.msg +
-      '</div>',
-    '导入结果',
-    { dangerouslyUseHTMLString: true }
-  );
-  getList();
-};
+// const handleFileSuccess = (response, file, fileList) => {
+//   upload.open = false;
+//   upload.isUploading = false;
+//   proxy.$refs['uploadRef'].clearFiles();
+//   proxy.$alert(
+//     "<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" +
+//       response.msg +
+//       '</div>',
+//     '导入结果',
+//     { dangerouslyUseHTMLString: true }
+//   );
+//   getList();
+// };
 /** 提交上传文件 */
-function submitFileForm() {
-  proxy.$refs['uploadRef'].submit();
-}
+// function submitFileForm() {
+//   proxy.$refs['uploadRef'].submit();
+// }
 /** 初始化部门数据 */
 function initTreeData() {
   // 判断部门的数据是否存在，存在不获取，不存在则获取
-  if (deptOptions.value === undefined) {
+  if (deptTreeOptions.value === undefined) {
     treeselect().then((response) => {
-      deptOptions.value = response;
+      deptTreeOptions.value = response;
     });
   }
 }
@@ -780,7 +855,6 @@ function initTreeData() {
 function reset() {
   form.value = {
     id: undefined,
-    dept_id: undefined,
     user_name: undefined,
     user_nickname: undefined,
     user_password: undefined,
@@ -788,19 +862,25 @@ function reset() {
     user_email: undefined,
     sex: undefined,
     user_status: '1',
+    is_admin: '1',
     remark: undefined,
     post_ids: [],
     role_ids: [],
-    role_id:undefined,
+    role_id: undefined,
+    dept_ids: [],
+    dept_id: undefined,
   };
   proxy.resetForm('userRef');
 }
 
-watch(() => form.value.role_ids, (newV, _) => {
-      if(newV.length === 0 || !newV.includes(form.value.role_id)){
-        form.value.role_id = undefined;
-      }
-    })
+watch(
+  () => form.value.role_ids,
+  (newV, _) => {
+    if (newV.length === 0 || !newV.includes(form.value.role_id)) {
+      form.value.role_id = undefined;
+    }
+  }
+);
 
 /** 取消按钮 */
 function cancel() {
@@ -825,6 +905,7 @@ async function handleUpdate(row) {
   form.value = user.user_info;
   form.value.post_ids = user.post_ids;
   form.value.role_ids = user.role_ids;
+  form.value.dept_ids = user.dept_ids;
   get_options(); //获取选项
   open.value = true;
   title.value = '修改用户';
@@ -837,14 +918,25 @@ async function get_options() {
     page_num: 1,
     page_size: Number.MAX_SAFE_INTEGER,
   };
-  const { list: posts } = await listPost(queryParams);
-  const { list: roles } = await listRole(queryParams);
+  const [{ list: posts }, { list: roles }, { list: depts }] = await Promise.all(
+    [listPost(queryParams), listRole(queryParams), listDept(queryParams)]
+  );
   postOptions.value = posts;
   roleOptions.value = roles;
+  deptOptions.value = depts;
+  const map = {};
+  depts.forEach((ele) => {
+    map[ele.dept_id] = ele.dept_name;
+  });
+  deptMapOptions.value = map;
 }
 /** 提交按钮 */
 function submitForm() {
   proxy.$refs['userRef'].validate((valid) => {
+    if (!form.value.dept_ids.includes(form.value.dept_id)) {
+      proxy.$modal.msgError('激活部门不在可选部门范围内，请重新选择');
+      return;
+    }
     if (valid) {
       if (form.value.id != undefined) {
         updateUser(form.value).then((response) => {
@@ -863,6 +955,6 @@ function submitForm() {
   });
 }
 
-getTreeselect();
+getDeptTreeselect();
 getList();
 </script>
