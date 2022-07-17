@@ -10,6 +10,9 @@
 </template>
 
 <script setup>
+import { computed,getCurrentInstance,ref,onMounted,onBeforeUnmount } from 'vue';
+import useTagsViewStore from '@/store/modules/tagsView'
+
 const tagAndTagSpacing = ref(4);
 const { proxy } = getCurrentInstance();
 
@@ -32,8 +35,8 @@ const emitScroll = () => {
   emits('scroll')
 }
 
-const store = useStore();
-const visitedViews = computed(() => store.state.tagsView.visitedViews);
+const tagsViewStore = useTagsViewStore()
+const visitedViews = computed(() => tagsViewStore.visitedViews);
 
 function moveToTarget(currentTag) {
   const $container = proxy.$refs.scrollContainer.$el
